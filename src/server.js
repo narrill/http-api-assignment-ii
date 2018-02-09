@@ -1,7 +1,5 @@
 const fs = require('fs');
 const http = require('http');
-const url = require('url');
-const querystring = require('querystring');
 
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
@@ -31,7 +29,7 @@ codeToId[403] = 'forbidden';
 
 const users = {};
 
-const addUser = ({name, age}) => {
+const addUser = ({ name, age }) => {
   users[name] = { name, age };
 };
 
@@ -39,23 +37,23 @@ const urls = {
   '/': getIndex,
   '/style.css': getStyle,
   '/getUsers': (req, res) => {
-    if(req.method === 'HEAD') {
+    if (req.method === 'HEAD') {
       respond(req, res, 200);
     } else {
-      respond(req, res, 200, 'application/json', JSON.stringify({users}));
+      respond(req, res, 200, 'application/json', JSON.stringify({ users }));
     }
   },
   '/notReal': (req, res) => {
-    if(req.method === 'HEAD') {
+    if (req.method === 'HEAD') {
       respond(req, res, 404);
     } else {
-      respond(req, res, 404, 'application/json', JSON.stringify({message: "Resource not found", id: codeToId[404]}));
+      respond(req, res, 404, 'application/json', JSON.stringify({ message: 'Resource not found', id: codeToId[404] }));
     }
   },
   '/addUser': (req, res) => {
     const body = [];
     req.on('error', (err) => {
-      respond(req, res, 400, 'application/json', JSON.stringify({message: err, id: codeToId[400]}));
+      respond(req, res, 400, 'application/json', JSON.stringify({ message: err, id: codeToId[400] }));
     });
     req.on('data', (chunk) => {
       console.log(chunk);
@@ -67,9 +65,9 @@ const urls = {
       const obj = JSON.parse(string);
       console.log(obj);
       addUser(obj);
-      respond(req, res, 200, 'application/json', JSON.stringify({message:'User created successfully', id:"Created"}));
+      respond(req, res, 200, 'application/json', JSON.stringify({ message: 'User created successfully', id: 'Created' }));
     });
-  }
+  },
 };
 
 const stripQueryParams = (reqUrl) => {
@@ -84,10 +82,7 @@ const onRequest = (request, response) => {
   console.log(request.url);
   const reqUrl = stripQueryParams(request.url);
 
-  if(urls[reqUrl])
-    urls[reqUrl](request, response);
-  else
-    respond(request, response, 404, 'application/json', JSON.stringify({message:"Not found", id: codeToId[404]}));
+  if (urls[reqUrl]) { urls[reqUrl](request, response); } else { respond(request, response, 404, 'application/json', JSON.stringify({ message: 'Not found', id: codeToId[404] })); }
 };
 
 http.createServer(onRequest).listen(port);
