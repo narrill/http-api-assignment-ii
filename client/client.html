@@ -6,27 +6,90 @@
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
   <script type="text/babel">
+  const fixString = (str) => {
+    return str.replace(/([A-Z])/g, ' $1').replace(/^./, (stri) => { return stri.toUpperCase(); });
+  }
+  const handleResponse = (xhr) => {
+    const responseObject = (xhr.response) ? JSON.parse(xhr.response) : {};
+    const statusElem = document.querySelector('#status');
+    const usersElem = document.querySelector('#users');
+    if(xhr.status === 200) {
+      usersElem.textContent = JSON.stringify(responseObject.users);
+      statusElem.textContent = "Success";
+    } else {
+      if(responseObject.id)
+        statusElem.textContent = fixString(responseObject.id);
+      usersElem.textContent = responseObject.message;
+    }
+  };
+  const dummy = () => false;
 
+  const makeRequest = (url, method) => {
+    console.log(`Request for ${method} to ${url}`);
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url);
+    xhr.onload = () => {
+      handleResponse(xhr);
+    };
+    xhr.send();
+  };
+
+  const makePostRequest = (name, age) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/addUser');
+    xhr.onload = () => {
+      handleResponse(xhr);
+    };
+    const obj = {name, age};
+    console.log(obj);
+    xhr.send(JSON.stringify(obj));
+  };
+
+  window.onload = () => {
+    const content = document.querySelector('#content');
+    const h1 = document.createElement('h1');
+    const p = document.createElement('p');
+    h1.id = 'status';
+    p.id = 'users';
+    content.appendChild(h1);
+    content.appendChild(p);
+
+    document.querySelector('#userForm').onsubmit = () => {
+      const urlElem = document.querySelector('#urlField');
+      const methodElem = document.querySelector('#methodSelect');
+
+      makeRequest(urlElem.options[urlElem.selectedIndex].value, methodElem.options[methodElem.selectedIndex].value);
+      return false;
+    };
+
+    document.querySelector('#nameForm').onsubmit = () => {
+      const nameElem = document.querySelector('#nameField');
+      const ageElem = document.querySelector('#ageField');
+
+      makePostRequest(nameElem.value, ageElem.value);
+      return false;
+    };
+  };
   </script>
 </head>
 <body>
   <section id="top">
     <h3>POST Status Code Tests</h3>
-    <form id="nameForm" action="/addUser" method="post">
+    <form id="nameForm" action="">
       <label for="name">Name: </label>
       <input id="nameField" type="text" name="name" />
       <label for="age">Age: </label>
       <input id="ageField" type="number" name="age" min="0" max="100" step="1"/>
       <input type="submit" value="Add User" />
     </form>
-    <form id="userForm" action="/getUsers" method="get">
+    <form id="userForm" action="">
       <select id='urlField'>
         <option value='/getUsers'>/getUsers</option>
         <option value='/notReal'>/notReal</option>
       </select>
       <select id="methodSelect">
-        <option value="get">GET</option>
-        <option value="head">HEAD</option>
+        <option value="GET">GET</option>
+        <option value="HEAD">HEAD</option>
       </select>
       <input type="submit" value="Get User" />
     </form>
